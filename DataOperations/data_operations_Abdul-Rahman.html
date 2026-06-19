@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Alex Edwards | Omar Abdul-Rahman">
+
+<title>Basic Spatial Data Operations</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="data_operations_files/libs/clipboard/clipboard.min.js"></script>
+<script src="data_operations_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="data_operations_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="data_operations_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="data_operations_files/libs/quarto-html/popper.min.js"></script>
+<script src="data_operations_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="data_operations_files/libs/quarto-html/anchor.min.js"></script>
+<link href="data_operations_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="data_operations_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="data_operations_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="data_operations_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="data_operations_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Basic Spatial Data Operations</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Alex Edwards | Omar Abdul-Rahman </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://johnsnowsociety.org/files/2023/09/Pac_map_cholera-2-1024x698.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="511"></p>
+</figure>
+</div>
+<section id="directions" class="level2">
+<h2 class="anchored" data-anchor-id="directions">Directions</h2>
+<p>This is a learning document that includes lecture components, examples, and your <a href="#lab">lab</a>. Please follow along and the examples as shown here and in lecture. <a href="#lab">At the end of this document you will find your lab with sections for your to complete</a>. You can use the code in the examples as a template to complete your <a href="#lab">lab</a>. Note, all packages needed for this lecture and lab are installed for you already and you only need to attach to them.</p>
+</section>
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning Objectives</h2>
+<ul>
+<li><p><a href="#import">Import spatial data that is in csv, Excel, and other non-spatial data files using the <code>rio</code> package.</a></p></li>
+<li><p><a href="#convert">Convert of non-spatial dataframes, that contain coordinates, into spatial dataframes using the <code>sf</code> package.</a></p></li>
+<li><p><a href="#convert">Project data using the <code>sf</code> package.</a></p></li>
+<li><p><a href="#concatenate">Concatenate, or stack, like spatial data to make a singular dataset using base R.</a></p></li>
+<li><p><a href="#tablejoin">Perform a table join of spatial data using the <code>tidyverse</code> package.</a></p></li>
+<li><p><a href="#selection">Select data based on attributes using the <code>tidyverse</code> package.</a></p></li>
+</ul>
+</section>
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>This lecture and lab will utilize data from John Snow’s cholera outbreak map of 1854. This data was generously shared by Dr.&nbsp;Julie Clennon of Emory University.</p>
+<p><strong>The data for this lecture can be found at the following path ‘data/&lt;filename&gt;’ where you replace &lt;filename&gt; with your file of interest.</strong></p>
+<p>All Shapefile data is projected to British National Grid (CRS=27700). This data is represented by the following files:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 24%">
+<col style="width: 23%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>File Type</th>
+<th>Spatial Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Cholera_Deaths_period_0_MOR.shp</td>
+<td>Shapefile</td>
+<td>Point</td>
+<td>Index case of cholera</td>
+</tr>
+<tr class="even">
+<td>Cholera_Deaths_period_1_JC.shp</td>
+<td>Shapefile</td>
+<td>Point</td>
+<td>Cases on days 1-4</td>
+</tr>
+<tr class="odd">
+<td>Cholera_Deaths_period_2_ECB.shp</td>
+<td>Shapefile</td>
+<td>Point</td>
+<td>Cases on days 5-9</td>
+</tr>
+<tr class="even">
+<td>Cholera_Deaths_period_3_LW.shp</td>
+<td>Shapefile</td>
+<td>Point</td>
+<td>Cases on days 10-14</td>
+</tr>
+<tr class="odd">
+<td>Cholera_Deaths_period_4_.shp</td>
+<td>Shapefile</td>
+<td>Point</td>
+<td>Cases on days 15-20</td>
+</tr>
+<tr class="even">
+<td>Estimated_for_Pump_Usage_Areas_18740912.shp</td>
+<td>Shapefile</td>
+<td>Polygon</td>
+<td>The estimated usage area for each of the 13 pumps.</td>
+</tr>
+<tr class="odd">
+<td>Pumps.xlsx</td>
+<td>Excel</td>
+<td>Point</td>
+<td>One point to represent each water pump on London’s Soho area</td>
+</tr>
+<tr class="even">
+<td>Soho_345782_Neighborhoods.shp</td>
+<td>Shapefile</td>
+<td>Polygon</td>
+<td>Each polygon represents a neighborhood in London’s Soho Area.</td>
+</tr>
+<tr class="odd">
+<td>soho_census.xlsx</td>
+<td>Excel</td>
+<td>None</td>
+<td>A non-spatial file that contains the estimated population of each Soho neighborhood. Can be linked via ID variable <code>Id</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section"></h2>
+</section>
+<section id="packages-of-note" class="level2">
+<h2 class="anchored" data-anchor-id="packages-of-note">Packages of note</h2>
+<p>This lecture and lab will utilize the <code>rio</code> package to read data that is not explicitly in spatial format like Excel or CSV data. This library has been installed for you.</p>
+<ul>
+<li><p><code>rio</code></p>
+<ul>
+<li>Its functions <code>import()</code> and <code>export()</code> can handle many different file types (e.g.&nbsp;.xlsx, .csv, .rds, .tsv). When you provide a file path to either of these functions (including the file extension like “.csv”), <strong>rio</strong> will read the extension and use the correct tool to import or export the file.</li>
+</ul></li>
+</ul>
+<p><strong><em>Attach</em></strong> the libraries we need.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.6
+✔ forcats   1.0.1     ✔ stringr   1.6.0
+✔ ggplot2   4.0.1     ✔ tibble    3.3.1
+✔ lubridate 1.9.4     ✔ tidyr     1.3.2
+✔ purrr     1.2.1     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rio)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="import" class="level2">
+<h2 class="anchored" data-anchor-id="import">Import</h2>
+<p>As discussed in the GIS basics module one of the most basic operations that we perform as analyst is the importation of data. However, not all data we wish to use is in a format recognized by the <code>sf</code> package. For most other files, and all files we will use in this class, you should use something like the <code>rio</code> package. The two main functions we will use from this package are <code>import()</code> and <code>export()</code> we will cover <code>import</code> here and <code>export</code> later in the lecture.</p>
+<p>Let’s see how the package works by importing the Pumps.xlsx data that contains the coordinates for teach of the 13 Soho pumps.</p>
+<p>remember the general format for creating a new data object <code>name &lt;- function</code></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pumps <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/Pumps.xlsx"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>You should now see the <code>pumps</code> object in your upper right environment window. Take a look at the data by clicking on the object in the environment window. Each pump has an <code>Id</code>, an <code>X</code> coordinate (i.e.&nbsp;longitude) and a <code>Y</code> coordinate (i.e.&nbsp;latitude). However, if we look at the <em>meta data</em>, or data about the data structure, using the <code>class()</code> function we see something strange.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(pumps)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "data.frame"</code></pre>
+</div>
+</div>
+<p>The <code>pumps</code> dataframe is just that a <code>data.frame</code> object and <u><strong>not</strong></u> an <code>sf</code> simple features dataframe.</p>
+<p>Since we know that this data can be spatial due to the coordinates in the <code>X</code> and <code>Y</code> variable, how do we make it into a spatial dataframe?</p>
+</section>
+<section id="convert" class="level2">
+<h2 class="anchored" data-anchor-id="convert">Convert and Project</h2>
+<p>In cases where we have coordinates but the dataframe is not spatial we can use the <code>sf</code> package to convert the data into usable spatial data using the <code>st_as_sf()</code> function. We will be <em>projecting</em> the data at the same time.</p>
+<p>A note on projections, in R a projection is ultimately just a long string of letters, words, and numbers that we can type in. However, that is absolutely tedious so instead we can look up the <em>European Petroleum Survey Group (EPSG)</em> number that corresponds to our projection. For the British National Grid used this this lab the EPSG is 27700, but how can we find this information. Use <a href="epsg.io">espg.io</a> to look up common numbers or a good ole` Google search like this <a href="https://www.google.com/search?q=epsg+27700&amp;oq=epsg+27&amp;gs_lcrp=EgZjaHJvbWUqDQgAEAAYkQIYgAQYigUyDQgAEAAYkQIYgAQYigUyBggBEEUYOTIHCAIQABiABDIHCAMQABiABDIICAQQABgWGB4yCAgFEAAYFhgeMggIBhAAGBYYHjIGCAcQRRg80gEIMzExN2owajSoAgCwAgA&amp;sourceid=chrome&amp;ie=UTF-8">link</a>. You can find the information about the British National Grid at this <a href="https://epsg.io/27700">link</a>.</p>
+<p>Now, lets convert the <code>pumps</code> data into the right format:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pumps_sf <span class="ot">&lt;-</span> pumps <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>), <span class="at">crs=</span><span class="dv">27700</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Let’s take this function apart:</p>
+<p><code>st_as_sf(coords = c("X", "Y"), crs=27700)</code></p>
+<ul>
+<li><p><code>coords = c("X", "Y")</code></p>
+<ul>
+<li>This attribute lets the function know that within the <code>pumps</code> dataset the coordinates for each pump are defined by their <code>X</code> and <code>Y</code> values. <strong>Note</strong>: X and Y, or Longitude and Latitude will always be in this order.</li>
+</ul></li>
+<li><p><code>crs=27700</code></p>
+<ul>
+<li>This attribute lets the function know that the new dataset <code>pumps_sf</code> will need to be in the EPSG 27700 or British National Grid projection.</li>
+</ul></li>
+</ul>
+<p>You should now see the <code>pumps_sf</code> object in your upper right environment window. Take a look at the data by clicking on the object in the environment window. Recall, we know that the <code>pumps_sf</code> dataset is now in spatial format because it contains a <code>geometry</code> column. You can also look at the <code>class()</code> function output.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(pumps_sf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "sf"         "data.frame"</code></pre>
+</div>
+</div>
+<p>The <code>class</code> function now shows the data as bothe <code>sf</code> and <code>data.frame</code> meaning we can now use it for mapping. Note, the output of the chunk below.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(pumps_sf)<span class="sc">+</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="concatenate" class="level2">
+<h2 class="anchored" data-anchor-id="concatenate">Concatenate</h2>
+<p>Sometimes we are given data that is spread across many files that we may not necessarily want distributed in such a way. How can we combine/stack/concatenate these files into one dataframe?</p>
+<p>We can use a <code>base</code> R function <code>rbind()</code> to combine multiple spatial dataframes into one. Keep in mind that the variable names must be consistent across all the dataframes in both spelling, case, and number. See the scenario below:</p>
+<p>First, let us read in all of the cholera case data:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>index <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_0_MOR.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_0_MOR' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_0_MOR.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1 feature and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529222.6 ymin: 181075.7 xmax: 529222.6 ymax: 181075.7
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>tm1 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_1_JC.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_1_JC' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_1_JC.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 141 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529044.5 ymin: 180764.2 xmax: 529634.1 ymax: 181356.2
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tm2 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_2_ECB.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_2_ECB' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_2_ECB.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 328 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529050 ymin: 180777.9 xmax: 529583.4 ymax: 181330.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>tm3 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_3_LW.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_3_LW' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_3_LW.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 23 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529101.3 ymin: 180963.2 xmax: 529450.9 ymax: 181267.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>tm4 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_4.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_4' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_4.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 84 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529056.2 ymin: 180822.7 xmax: 529487 ymax: 181357
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+</div>
+<p>We now have five files that represent the five cholera epidemic time periods. If we look at the <code>names()</code> function for each of these files we can see that they all share a common set of variable names:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(index)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "OBJECTID" "X"        "Y"        "Period"   "geometry"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tm1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "OBJECTID" "X"        "Y"        "Period"   "geometry"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tm2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "OBJECTID" "X"        "Y"        "Period"   "geometry"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tm3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "OBJECTID" "X"        "Y"        "Period"   "geometry"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tm4)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "OBJECTID" "X"        "Y"        "Period"   "geometry"</code></pre>
+</div>
+</div>
+<p>Now, lets combine these datasets into one single <code>sf</code> dataframe:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>cases_sf <span class="ot">&lt;-</span> <span class="fu">rbind</span>(index, tm1, tm2, tm3, tm4)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>If you look at the data <code>cases_sf</code> you will now see 577 rows, each is a case. We can even know which cases in the <code>cases_sf</code> dataset come from which period based on the <code>period</code> variable. Sweet!</p>
+<p>Let’s map all the cases and set the point size to 0.25mm:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(cases_sf)<span class="sc">+</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="table-join" class="level2">
+<h2 class="anchored" data-anchor-id="table-join">Table Join</h2>
+<p>Table joins in ArcGIS are a point an click affair, and a lot of the logic is hidden away from you behind the scenes. With R and the <code>tidyverse</code> package you have more control over how the operations work.</p>
+<p>For this section we will need the Soho neighborhood data, and the Soho neighborhood census data. Keep in mind, this example will be joinging together two datasets; however, two is not the limit and you can actually keep joining if you needed. In addition, this example joins together one spatial and one non-spatial data set; however, this join works for any datasets as long as they share a common id.</p>
+<p>We will read in two datasets here:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>neighborhoods <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Soho__345782_Neighborhoods.shp"</span>)<span class="co">#note the double underscore :(</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Soho__345782_Neighborhoods' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Soho__345782_Neighborhoods.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 126 features and 1 field
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 528874.3 ymin: 180566 xmax: 529795.1 ymax: 181471.9
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>neighborhoods_census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/soho_census.xlsx"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Notice: we used st_read for the neighborhoods polygon Shapefile because it is spatial; however, we used import for the census data because it is in Excel format.</p>
+<p>Notice-Notice: the census data does not contain coordinates, it is not spatial, so we do not need to do a conversion or projection like we did above.</p>
+<p>Now, let’s look at this data:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View(neighborhoods)</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># View(neighborhoods_census)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Notice, all 126 neighborhoods have census data, but there are many rows in the census data that do not match to a row in the neighborhood data. This is fine, we will only match the ones we can and toss the rest aside. For this we will use an inner join by calling the function <code>inner_join()</code> that when piping takes only two arguments the dataset we wish to join with and the id variable we wish to join with. The id variable must have its name in quotes for some reason.</p>
+<p>Remember, the two datasets must share an id.</p>
+<p>Let’s join:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>neighborhood_w_census <span class="ot">&lt;-</span> neighborhoods <span class="sc">|&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">inner_join</span>(neighborhoods_census, <span class="at">by=</span><span class="st">"Id"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Let’s look at the first few rows with the <code>head()</code> function which shows the first rows:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(neighborhood_w_census)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 6 features and 3 fields
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 529129.2 ymin: 180566 xmax: 529646 ymax: 180746.4
+Projected CRS: OSGB36 / British National Grid
+   Id Area_meter Population                       geometry
+1 310   551.3614         55 POLYGON ((529457.5 180726.9...
+2 314  2016.0734        202 POLYGON ((529586.3 180694.4...
+3 315   201.6991         20 POLYGON ((529451.6 180731.7...
+4 317   203.6904         20 POLYGON ((529423.4 180729.4...
+5 321  8823.2908        882 POLYGON ((529197.5 180722.7...
+6 322  5640.9236        564 POLYGON ((529626.6 180697.8...</code></pre>
+</div>
+</div>
+<p>Yep, the join was successful and we now see that each neighborhood block has a population associated with it. Let’s map it using the <code>fill</code> argument to <code>tm_polygons</code> to color by <code>Population</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span><span class="st">"Population"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="selection" class="level2">
+<h2 class="anchored" data-anchor-id="selection">Selection</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://ehsanx.github.io/intro2R/images/logical.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="332"></p>
+</figure>
+</div>
+<p>In a prior lecture we discussed how best to subset datasets using the <code>filter</code> function for the <code>tidyverse</code> package. The table above list the operators that we can use in the <code>filter</code> function to select the rows we wish to use. Given that the <code>sf</code> dataframes we are working with are ‘tidy’ we can use that same function and a few helper functions to select observations/rows by an attribute value. Let’s see below.</p>
+<p>For this example we will be using the <code>neighborhood_w_census</code> data that was created in the <a href="#table-join">Table Join</a> section of this document. Recall that the dataset consist of 126 polygons that represent each neighborhood in the Soho community of London’s East End. After the table join, each of those polygons also has a population value associated with it. What can we do with it?</p>
+<p>You can choose the rows that fit certain criteria, for example <code>Population &gt; 100</code></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>pop_100 <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>           <span class="fu">filter</span>(Population <span class="sc">&gt;</span> <span class="dv">100</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now, if we look at the <code>pop_100</code> dataframe there are only 100 rows.</p>
+<p>What if we want the inverse, <code>Population &lt;= 100</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>pop_le_100 <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>           <span class="fu">filter</span>(Population <span class="sc">&lt;=</span> <span class="dv">100</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now, we only have 26 observations. If you <code>View</code> both of those datasets you will see that the <code>Population</code> variable matches out given criteria.</p>
+<p>But, what about the neighborhood with the highest population? We use a helper function instead of filter, we use <code>slice_max</code> to return the one row with the highest population.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>pop_max <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>           <span class="fu">slice_max</span>(Population)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>What about the minimum? We use <code>slice_min</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>pop_min <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>           <span class="fu">slice_min</span>(Population)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now, let’s put this together with what we know to answer the following with a map. This map is incomplete because it would need a scale bar, and north arrow etc.</p>
+<p>Create a map that shows all of the Soho neighborhoods colored by population, highlight the neighborhood with the highest population in red.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span><span class="st">"Population"</span>)<span class="sc">+</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(pop_max)<span class="sc">+</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span><span class="st">"red"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>See how easy that was?</p>
+<p>Now, what if I just want to show the outline of the neighborhoods with no <code>fill</code> color, well we use <code>tm_borders</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>()<span class="sc">+</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(pop_max)<span class="sc">+</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span><span class="st">"red"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="lab" class="level2">
+<h2 class="anchored" data-anchor-id="lab">Lab Two</h2>
+<section id="data" class="level3">
+<h3 class="anchored" data-anchor-id="data">Data</h3>
+<p>You may use any of the data in the ‘data’ folder listed in the [Background] section of this document or that has been created in the code above to answer these questions.</p>
+</section>
+<section id="directions-1" class="level3">
+<h3 class="anchored" data-anchor-id="directions-1">Directions</h3>
+<p>You do not need to answer any questions with anything besides code and a map unless explicitly asked to do so.</p>
+<ol type="1">
+<li><p>Import your libraries here</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rio)</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>pumps <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/Pumps.xlsx"</span>)</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/Soho_census.xlsx"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Create a map that shows the neighborhoods of Soho as hollow with no fill color and with <strong>all</strong> cases shown as points. Use the blank chunk below for your code.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>pumps_sf <span class="ot">&lt;-</span> pumps <span class="sc">|&gt;</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>), <span class="at">crs=</span><span class="dv">27700</span>)</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>index <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_0_MOR.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_0_MOR' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_0_MOR.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1 feature and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529222.6 ymin: 181075.7 xmax: 529222.6 ymax: 181075.7
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>cld1 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_1_JC.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_1_JC' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_1_JC.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 141 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529044.5 ymin: 180764.2 xmax: 529634.1 ymax: 181356.2
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>cld2 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_2_ECB.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_2_ECB' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_2_ECB.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 328 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529050 ymin: 180777.9 xmax: 529583.4 ymax: 181330.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>cld3 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_3_LW.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_3_LW' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_3_LW.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 23 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529101.3 ymin: 180963.2 xmax: 529450.9 ymax: 181267.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>cld4 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_4.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_4' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_4.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 84 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529056.2 ymin: 180822.7 xmax: 529487 ymax: 181357
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>cases_sf <span class="ot">&lt;-</span> <span class="fu">rbind</span>(index, cld1, cld2, cld3, cld4)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>neighborhoods <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Soho__345782_Neighborhoods.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Soho__345782_Neighborhoods' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Soho__345782_Neighborhoods.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 126 features and 1 field
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 528874.3 ymin: 180566 xmax: 529795.1 ymax: 181471.9
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>neighborhoods_census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/soho_census.xlsx"</span>)</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>neighborhood_w_census <span class="ot">&lt;-</span> neighborhoods <span class="sc">|&gt;</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">inner_join</span>(neighborhoods_census, <span class="at">by=</span><span class="st">"Id"</span>) </span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>pop_max <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">slice_max</span>(Population)</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span>)<span class="sc">+</span></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(cases_sf)<span class="sc">+</span></span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+<li><p>Now, reusing code from question one, set the color of each point to represent which time period that case occurred in. Use the blank chunk below for your code.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>   pumps_sf <span class="ot">&lt;-</span> pumps <span class="sc">|&gt;</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>), <span class="at">crs=</span><span class="dv">27700</span>)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>index <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_0_MOR.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_0_MOR' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_0_MOR.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1 feature and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529222.6 ymin: 181075.7 xmax: 529222.6 ymax: 181075.7
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>cld1 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_1_JC.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_1_JC' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_1_JC.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 141 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529044.5 ymin: 180764.2 xmax: 529634.1 ymax: 181356.2
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>cld2 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_2_ECB.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_2_ECB' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_2_ECB.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 328 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529050 ymin: 180777.9 xmax: 529583.4 ymax: 181330.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>cld3 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_3_LW.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_3_LW' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_3_LW.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 23 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529101.3 ymin: 180963.2 xmax: 529450.9 ymax: 181267.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>cld4 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_4.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_4' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_4.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 84 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529056.2 ymin: 180822.7 xmax: 529487 ymax: 181357
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>neighborhoods <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Soho__345782_Neighborhoods.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Soho__345782_Neighborhoods' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Soho__345782_Neighborhoods.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 126 features and 1 field
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 528874.3 ymin: 180566 xmax: 529795.1 ymax: 181471.9
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>neighborhoods_census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/soho_census.xlsx"</span>)</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>neighborhood_w_census <span class="ot">&lt;-</span> neighborhoods <span class="sc">|&gt;</span></span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">inner_join</span>(neighborhoods_census, <span class="at">by=</span><span class="st">"Id"</span>) </span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>pop_max <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">slice_max</span>(Population)</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span>)<span class="sc">+</span></span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(index)<span class="sc">+</span></span>
+<span id="cb75-11"><a href="#cb75-11" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"purple"</span>, <span class="at">col =</span> <span class="st">"purple"</span>)<span class="sc">+</span></span>
+<span id="cb75-12"><a href="#cb75-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(cld1)<span class="sc">+</span></span>
+<span id="cb75-13"><a href="#cb75-13" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"red"</span>, <span class="at">col =</span> <span class="st">"red"</span>)<span class="sc">+</span></span>
+<span id="cb75-14"><a href="#cb75-14" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_shape</span>(cld2)<span class="sc">+</span></span>
+<span id="cb75-15"><a href="#cb75-15" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"blue"</span>, <span class="at">col =</span> <span class="st">"blue"</span>)<span class="sc">+</span></span>
+<span id="cb75-16"><a href="#cb75-16" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_shape</span>(cld3)<span class="sc">+</span></span>
+<span id="cb75-17"><a href="#cb75-17" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">col =</span> <span class="st">"orange"</span>)<span class="sc">+</span></span>
+<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_shape</span>(cld4)<span class="sc">+</span></span>
+<span id="cb75-19"><a href="#cb75-19" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"brown"</span>, <span class="at">col =</span> <span class="st">"brown"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+<li><p>Create two maps below, one that shows the Soho neighborhoods with the cases from time period two and an additional map that shows the cases from time period three. Use the blank chunks provided to write your code.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>pumps_sf <span class="ot">&lt;-</span> pumps <span class="sc">|&gt;</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>), <span class="at">crs=</span><span class="dv">27700</span>)</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>cld2 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_2_ECB.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_2_ECB' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_2_ECB.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 328 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529050 ymin: 180777.9 xmax: 529583.4 ymax: 181330.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>neighborhoods <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Soho__345782_Neighborhoods.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Soho__345782_Neighborhoods' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Soho__345782_Neighborhoods.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 126 features and 1 field
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 528874.3 ymin: 180566 xmax: 529795.1 ymax: 181471.9
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>neighborhoods_census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/soho_census.xlsx"</span>)</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>neighborhood_w_census <span class="ot">&lt;-</span> neighborhoods <span class="sc">|&gt;</span></span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">inner_join</span>(neighborhoods_census, <span class="at">by=</span><span class="st">"Id"</span>) </span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>pop_max <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">slice_max</span>(Population)</span>
+<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb80-9"><a href="#cb80-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span>)<span class="sc">+</span></span>
+<span id="cb80-10"><a href="#cb80-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_shape</span>(cld2)<span class="sc">+</span></span>
+<span id="cb80-11"><a href="#cb80-11" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"blue"</span>, <span class="at">col =</span> <span class="st">"blue"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>pumps_sf <span class="ot">&lt;-</span> pumps <span class="sc">|&gt;</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>), <span class="at">crs=</span><span class="dv">27700</span>)</span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>index <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_0_MOR.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_0_MOR' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_0_MOR.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1 feature and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529222.6 ymin: 181075.7 xmax: 529222.6 ymax: 181075.7
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>cld1 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_1_JC.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_1_JC' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_1_JC.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 141 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529044.5 ymin: 180764.2 xmax: 529634.1 ymax: 181356.2
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>cld2 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_2_ECB.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_2_ECB' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_2_ECB.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 328 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529050 ymin: 180777.9 xmax: 529583.4 ymax: 181330.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>cld3 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_3_LW.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_3_LW' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_3_LW.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 23 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529101.3 ymin: 180963.2 xmax: 529450.9 ymax: 181267.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>cld4 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_4.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_4' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_4.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 84 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529056.2 ymin: 180822.7 xmax: 529487 ymax: 181357
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>neighborhoods <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Soho__345782_Neighborhoods.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Soho__345782_Neighborhoods' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Soho__345782_Neighborhoods.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 126 features and 1 field
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 528874.3 ymin: 180566 xmax: 529795.1 ymax: 181471.9
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>neighborhoods_census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/soho_census.xlsx"</span>)</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>neighborhood_w_census <span class="ot">&lt;-</span> neighborhoods <span class="sc">|&gt;</span></span>
+<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">inner_join</span>(neighborhoods_census, <span class="at">by=</span><span class="st">"Id"</span>) </span>
+<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a>pop_max <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">slice_max</span>(Population)</span>
+<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span>)<span class="sc">+</span></span>
+<span id="cb93-10"><a href="#cb93-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_shape</span>(cld3)<span class="sc">+</span></span>
+<span id="cb93-11"><a href="#cb93-11" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">col =</span> <span class="st">"orange"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+<li><p>Look at the two maps you created for question three, did the cholera epidemic begin to abate between these two time points? Justify your answer. Answer using the bullet below</p>
+<p>Yes the cholera epidemic appears to begin to abate between these two time points</p>
+<ul>
+<li>First map, there is a much higher density and wider spatial distribution of cases, which could indicate a more widespread transmission<br>
+</li>
+<li>Second map, the number of cases is lower and more clustered which can suggest a reduction in the intensity and spread of the outbreak</li>
+</ul></li>
+<li><p>Create a map that shows where the water pumps are located in relation to the Soho neighborhoods, set the color of the pumps to green and the size of the points to 0.4mm. Use the blank chunk below for your code.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span>)<span class="sc">+</span></span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(pumps_sf)<span class="sc">+</span></span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.4</span>, <span class="at">fill =</span> <span class="st">"green"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+<li><p>The pump with the ID number 7 is the Broad Street Pump that John Snow suspected of being the infected pump. For this map, reuse your code from question five and add an additional layer that highlights pump seven with the color red and a size of 0.55mm. See <a href="#selection">Selection</a> for an example that would be helpful. Use the blank chunk below for your code.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>pump7 <span class="ot">&lt;-</span> pumps_sf <span class="sc">|&gt;</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">filter</span>(Pump_ID <span class="sc">==</span> <span class="dv">7</span>)</span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span>)<span class="sc">+</span></span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(pump7)<span class="sc">+</span></span>
+<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.4</span>, <span class="at">fill =</span> <span class="st">"red"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+<li><p>Use any of the data you like in this project and create a map of your choosing. Using the bullet point below to tell me what question the map answers and the blank chunk below for your code.</p>
+<ul>
+<li><p>This map will compare the density of Period 1 of the cholera outbreak (Gold) to Period 4 (Navy Blue) and it will be show the changes of concentations in contrast to the water pumps (Red) spread throughout the city.</p></li>
+<li><p>The question I plan to answer is, which water pumps had the highest numbers of cholera cases between 2 periods of the outbreak? In addition, as the outbreak progressed did the number of cases wane between the two periods displayed? If so, did did the locations of the outbreak hotspots change and what pumps were in close proximity to the later outbreaks?</p></li>
+<li><p>Compared to outbreak 1 outbreak 4 had decreased dramatically. In addition, during the first outbreak, despite the concentration of the cases being highest in the center of Soho the amount of cases spread partway through the east, west, and stretched to the south end of Soho. During the 4th outbreak the cases began clustering towards the center of Soho and was basically surrounded pump 7, that pump being the only pump during this time period to still have high concentrations of cholera patients save some outliers throughout the city.</p></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>   pumps_sf <span class="ot">&lt;-</span> pumps <span class="sc">|&gt;</span></span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>), <span class="at">crs=</span><span class="dv">27700</span>)</span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>index <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_0_MOR.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_0_MOR' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_0_MOR.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1 feature and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529222.6 ymin: 181075.7 xmax: 529222.6 ymax: 181075.7
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>cld4 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_4.shp"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_4' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Cholera_Deaths_period_4.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 84 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529056.2 ymin: 180822.7 xmax: 529487 ymax: 181357
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>neighborhoods <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Soho__345782_Neighborhoods.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Soho__345782_Neighborhoods' from data source 
+  `/Users/omara-rahman/Downloads/DataOperations (4)/data/Soho__345782_Neighborhoods.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 126 features and 1 field
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 528874.3 ymin: 180566 xmax: 529795.1 ymax: 181471.9
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>neighborhoods_census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/soho_census.xlsx"</span>)</span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>neighborhood_w_census <span class="ot">&lt;-</span> neighborhoods <span class="sc">|&gt;</span></span>
+<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">inner_join</span>(neighborhoods_census, <span class="at">by=</span><span class="st">"Id"</span>) </span>
+<span id="cb102-5"><a href="#cb102-5" aria-hidden="true" tabindex="-1"></a>pop_max <span class="ot">&lt;-</span> neighborhood_w_census <span class="sc">|&gt;</span></span>
+<span id="cb102-6"><a href="#cb102-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">slice_max</span>(Population)</span>
+<span id="cb102-7"><a href="#cb102-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb102-8"><a href="#cb102-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhood_w_census)<span class="sc">+</span></span>
+<span id="cb102-9"><a href="#cb102-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">fill=</span>)<span class="sc">+</span></span>
+<span id="cb102-10"><a href="#cb102-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_shape</span>(cld1)<span class="sc">+</span></span>
+<span id="cb102-11"><a href="#cb102-11" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"darkgoldenrod1"</span>, <span class="at">col =</span> <span class="st">"darkgoldenrod1"</span>)<span class="sc">+</span></span>
+<span id="cb102-12"><a href="#cb102-12" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_shape</span>(cld4)<span class="sc">+</span></span>
+<span id="cb102-13"><a href="#cb102-13" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"navy"</span>, <span class="at">col =</span> <span class="st">"navy"</span>)<span class="sc">+</span></span>
+<span id="cb102-14"><a href="#cb102-14" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(pumps_sf)<span class="sc">+</span></span>
+<span id="cb102-15"><a href="#cb102-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>(<span class="at">size =</span> <span class="fl">0.25</span>, <span class="at">fill =</span> <span class="st">"red"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="data_operations_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+</ol>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

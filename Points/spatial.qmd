@@ -1,0 +1,346 @@
+---
+title: "Spatial Analysis"
+format: html
+editor: visual
+---
+
+## Directions
+
+This is a learning document that includes lecture components, examples, and your lab. Please follow along and the examples as shown here and in lecture. At the end of this document you will find your lab with sections for your to complete. You can use the code in the examples as a template to complete your lab.
+
+## Setup
+
+We will attach to our packages and import our data here. For all the examples in this document we will only be using the cholera case data from period two. We will also use the pumps and neighborhood data. Only one new package will be used for this, `terra` ,and it will be to create heatmaps to indicate areas of high or low cases.
+
+```{r}
+library(tidyverse)
+library(tmap)
+library(sf)
+library(rio)
+library(SpatialKDE)
+
+deaths <- st_read("data/Cholera_Deaths_period_2_ECB.shp")
+neighborhoods <-st_read("data/Soho__345782_Neighborhoods.shp")
+census <- import("data/soho_census.xlsx")
+pumps <- import("data/Pumps.xlsx")
+
+pumps_sf <- pumps |>
+            st_as_sf(coords = c("X", "Y"), crs=27700)
+```
+
+## Spatial Joins
+
+A **spatial join** is a technique used in geographic information systems (GIS) to combine data from two datasets based on their spatial relationship. It is similar to a database join but is based on the geometry of spatial features, such as points, lines, or polygons, instead of attribute values.
+
+### Key Features of Spatial Joins
+
+1.  **Spatial Relationships**:
+
+    -   **Proximity**: Joining features based on whether one is near another.
+
+    -   **Containment**: Joining features that are completely within another feature.
+
+2.  **Input Data**:
+
+    -   Usually involves two spatial datasets:
+
+        -   **Target dataset**: The main dataset where attributes are appended.
+
+        -   **Join dataset**: The dataset providing the additional attributes.
+
+3.  **Result**:
+
+    -   A new dataset is created, combining attributes from both datasets based on their spatial relationship.
+
+### Common Examples
+
+-   **Assigning Points to Polygons**: Assigning city points to the state polygons they belong to.
+
+-   **Proximity Analysis**: Finding the nearest hospital for each school.
+
+------------------------------------------------------------------------
+
+## Count Points in a Polygon
+
+Often we want to know how many points fall within a polygon. This can be helpful to calculate rates or prevalence by a given polygon. An example may be the number of tuberculosis cases in a given census tract.
+
+For this example we want to calculate the number of cholera deaths per Soho neighborhood block in our data during period two of the cholera outbreak.
+
+This will require the target dataset, neighborhoods, and the join dataset deaths.
+
+The function we will use is `st_join` and it takes three arguments:
+
+-   the `points` data
+
+-   the `polygon` data
+
+-   and the `join` type, in this case `st_within` to count the points that fall *within* a polygon
+
+We will also use `st_drop_geometry` so that we can remove the geometry to aggregate the cases within the neighborhoods.
+
+This process will take a few steps, let's look at them
+
+1.  Step One: We get a joined dataset that has repeated polygons, one for each death. This will not map, we need to aggregate to count those cases. This only links the cases to the polygon.
+
+    ```{r}
+    points_in_polygons <- st_join(deaths, neighborhoods, join=st_within)
+    ```
+
+2.  Step Two: We must remove the geometry using `st_drop_geometry` so that we can aggregate and count the number of cases per polygon. We will `group_by` and the `Id` variable to get the counts. Notice, if we look at the number of rows in the `point_counts` dataset there are only 51, that means only 51 of the polygons have cases.
+
+    ```{r}
+    point_counts <- points_in_polygons %>%
+      st_drop_geometry() %>%
+      count(Id)
+    ```
+
+3.  Step Three: We now have the `point_counts` dataset which has the counts by polygon `Id` lets table join to the `neighborhoods` by `Id` to get the count data in the `neighborhoods`.
+
+    ```{r}
+    neighborhoods_death <- neighborhoods |> 
+                           inner_join(point_counts, by=join_by("Id"))
+    ```
+
+4.  Step Four: Let's map this thing!
+
+    ```{r}
+    tm_shape(neighborhoods)+
+      tm_polygons()+
+      tm_shape(neighborhoods_death)+
+      tm_fill(col = "n", title="Cholera Cases" )
+    ```
+
+## Find the Closest Point
+
+Now, what if we want to know which pump is closest to each case? That is a spatial join as well.
+
+Lets use a function called `st_nearest_feature` which takes two arguments:
+
+-   `x` for each item in this object we will find its closest feature in `y`
+
+-   `y` our object that holds the features were searching for
+
+1.  Step One: Lets get the index of the closest feature
+
+    ```{r}
+    nearest <- deaths |> 
+                 mutate(pump = st_nearest_feature(deaths, pumps_sf))
+    ```
+
+2.  Step Two: Let's visualize the deaths by their closest pump
+
+    ```{r}
+    tm_shape(neighborhoods)+
+      tm_borders()+
+      tm_shape(nearest)+
+      tm_dots(col="pump", size=.5)+
+      tm_shape(pumps_sf)+
+      tm_dots(col="Pump_ID")
+               
+    ```
+
+## Kernel Density Estimate
+
+We can now create a heatmap of the cases so that we can where the cases happen most often.
+
+1.  Step One: Define the Study Area by defining a bounding polygon or a grid for KDE calculation. `cell_size` here is the size of the grid cells we wish to use based on the units of the features. In this case `deaths` is in British National Grid projection so it is in meters. So `cell_size` 1 is one meter by one meter. **This may take a bit!**
+
+    ```{r}
+    # Create a study grid over the area
+    grid <- create_raster(deaths, cell_size = 1)
+
+    ```
+
+2.  Step Two: Calculate the kernel density, meaning how many cases happen in each of the cells of the raster grid. Wider bandwidth means 'smoother' rasters. **This may take a bit!**
+
+    ```{r}
+    # KDE computation
+    kde_result_15 <- kde(
+      points = deaths,
+      band_width = 15,  # Adjust bandwidth as needed
+      grid = grid
+    )
+    ```
+
+3.  Now, let's map this raster
+
+    ```{r}
+    tm_shape(kde_result_15)+
+      tm_raster()
+    ```
+
+4.  Now, lets alter the bandwidth to see what 'smoother' means.
+
+    ```{r}
+    # KDE computation
+    kde_result_35 <- kde(
+      points = deaths,
+      band_width = 35,  # Adjust bandwidth as needed
+      grid = grid
+    )
+    ```
+
+5.  Let's map that, lookie there! We can see a pattern emerging!
+
+    ```{r}
+    tm_shape(kde_result_35)+
+      tm_raster()
+    ```
+
+## Lab
+
+### Background
+
+-   This lab will encompass all the labs but will mostly focus on what has been learned in this lesson.
+
+-   For this lab you will need to combine the deaths data into one dataset, we covered that a few lectures ago.
+
+-   All maps must contain proper elements.
+
+-   Any response from you should be in the chunks unless it ask you for a response aside from code you will see a bullet point.
+
+### Assignment
+
+1.  In the code chunk below, import and combine all the deaths data. Also, import the pumps, neighborhood, and census data.
+
+    ```{r}
+    pumps <- import("data/Pumps.xlsx")
+    census <- import("data/Soho_census.xlsx")
+    neighborhoods_census <- import("data/soho_census.xlsx")
+
+    deaths0 <- st_read("data/Cholera_Deaths_period_0_MOR.shp")
+    deaths1 <- st_read("data/Cholera_Deaths_period_1_JC.shp")
+    deaths3 <- st_read("data/Cholera_Deaths_period_3_LW.shp")
+    deaths4 <- st_read("data/Cholera_Deaths_period_4.shp")
+      
+    deaths <- rbind(deaths, deaths0, deaths1, deaths3, deaths4)
+    ```
+
+2.  Perform a join to combine the census data and the neighborhood data using the chunk below.
+
+    ```{r}
+    neighborhoods <- neighborhoods %>% 
+              inner_join(census, join_by("Id"))
+    ```
+
+3.  Perform a spatial join that counts the number of cholera deaths per neighborhood. Call this dataset neighborhood_joined
+
+    ```{r}
+    points_in_polygons <- st_join(deaths, neighborhoods, join=st_within)
+    point_counts <- points_in_polygons %>%
+      st_drop_geometry() %>%
+      count(Id)
+    neighborhoods_joined <- neighborhoods |> 
+                           left_join(point_counts, by=join_by("Id"))
+    ```
+
+4.  Using the neighborhood_joined dataset from step three calculate prevalence of cholera within each of the neighborhoods. You may represent this number as a decimal or percentage. Hint: Use `mutate()` and some math operators. Note, you cannot divide by zero so make sure you do not have any neighborhood that have zero population. If you do, remove them.
+
+    ```{r}
+    neighborhoods_joined <- neighborhoods_joined %>% 
+                            mutate(prev = n/Population)
+    ```
+
+5.  Create a map that shows the number of cases per neighborhood
+
+    ```{r}
+    tm_shape(neighborhoods_joined)+
+      tm_polygons(col="n")
+    ```
+
+6.  Create a map that shows the prevalence per neighborhood
+
+    ```{r}
+    tm_shape(neighborhoods_joined)+
+      tm_polygons(col="prev")
+    ```
+
+7.  Now, perform a KDE with a cell size of 1 and a bandwidth of 50
+
+    ```{r}
+    grid <- create_raster(deaths, cell_size = 1)
+
+    kde_result_50 <- kde(
+      points = deaths,
+      band_width = 50,  
+      grid = grid
+    )
+
+    tm_shape(kde_result_50)+
+      tm_raster()
+    ```
+
+8.  Map the KDE from step seven, show the pumps.
+
+    ```{r}
+
+    grid <- create_raster(deaths, cell_size = 1)
+
+    kde_result_50 <- kde(
+      points = deaths,
+      band_width = 50,  
+      grid = grid)
+
+    nearest <- deaths |> 
+                 mutate(pump = st_nearest_feature(deaths, pumps_sf))
+      
+    tm_shape(neighborhoods)+
+      tm_borders()+
+      tm_shape(kde_result_50)+
+      tm_raster()+
+      tm_shape(nearest)+
+      tm_dots(col="pump", size=.5)+
+      tm_shape(pumps_sf)+
+      tm_dots(fill="purple")
+
+
+
+    ```
+
+9.  What pump seems to have the highest density near it, you do not need to give a number you can say something like, the central or the far left
+
+    -   At the center and lower center-right
+
+10. Now, perform a KDE with a cell size of 1 and a bandwidth of 100
+
+    ```{r}
+    grid <- create_raster(deaths, cell_size = 1)
+
+    kde_result_100 <- kde(
+      points = deaths,
+      band_width = 100,  
+      grid = grid
+    )
+
+    tm_shape(kde_result_100)+
+      tm_raster()
+    ```
+
+11. Map the KDE from step ten, show the pumps.
+
+    ```{r}
+
+    grid <- create_raster(deaths, cell_size = 1)
+
+    kde_result_100 <- kde(
+      points = deaths,
+      band_width = 100,
+      grid = grid
+    )
+
+    nearest <- deaths |>
+      mutate(pump = st_nearest_feature(geometry, pumps_sf))
+
+    tm_shape(neighborhoods) +
+      tm_borders() +
+      tm_shape(kde_result_100) +
+      tm_raster() +
+      tm_shape(nearest) +
+      tm_dots(col = "pump", size = 0.5) +
+      tm_shape(pumps_sf) +
+      tm_dots(fill = "purple") 
+    ```
+
+12. What pump seems to have the highest density near it, you do not need to give a number you can say something like, the central or the far left
+
+    -   Both at the center and the lower-central right

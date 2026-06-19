@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Spatial Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="spatial_files/libs/clipboard/clipboard.min.js"></script>
+<script src="spatial_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="spatial_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="spatial_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="spatial_files/libs/quarto-html/popper.min.js"></script>
+<script src="spatial_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="spatial_files/libs/quarto-html/anchor.min.js"></script>
+<link href="spatial_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="spatial_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="spatial_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="spatial_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="spatial_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Spatial Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="directions" class="level2">
+<h2 class="anchored" data-anchor-id="directions">Directions</h2>
+<p>This is a learning document that includes lecture components, examples, and your lab. Please follow along and the examples as shown here and in lecture. At the end of this document you will find your lab with sections for your to complete. You can use the code in the examples as a template to complete your lab.</p>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>We will attach to our packages and import our data here. For all the examples in this document we will only be using the cholera case data from period two. We will also use the pumps and neighborhood data. Only one new package will be used for this, <code>terra</code> ,and it will be to create heatmaps to indicate areas of high or low cases.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.6
+✔ forcats   1.0.1     ✔ stringr   1.6.0
+✔ ggplot2   4.0.1     ✔ tibble    3.3.1
+✔ lubridate 1.9.4     ✔ tidyr     1.3.2
+✔ purrr     1.2.1     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rio)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(SpatialKDE)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>deaths <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_2_ECB.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_2_ECB' from data source 
+  `/Users/omara-rahman/Desktop/Semester 2 MPH/Computer based class/BIOS 532/Points/data/Cholera_Deaths_period_2_ECB.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 328 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529050 ymin: 180777.9 xmax: 529583.4 ymax: 181330.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>neighborhoods <span class="ot">&lt;-</span><span class="fu">st_read</span>(<span class="st">"data/Soho__345782_Neighborhoods.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Soho__345782_Neighborhoods' from data source 
+  `/Users/omara-rahman/Desktop/Semester 2 MPH/Computer based class/BIOS 532/Points/data/Soho__345782_Neighborhoods.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 126 features and 1 field
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 528874.3 ymin: 180566 xmax: 529795.1 ymax: 181471.9
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/soho_census.xlsx"</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>pumps <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/Pumps.xlsx"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>pumps_sf <span class="ot">&lt;-</span> pumps <span class="sc">|&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>), <span class="at">crs=</span><span class="dv">27700</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="spatial-joins" class="level2">
+<h2 class="anchored" data-anchor-id="spatial-joins">Spatial Joins</h2>
+<p>A <strong>spatial join</strong> is a technique used in geographic information systems (GIS) to combine data from two datasets based on their spatial relationship. It is similar to a database join but is based on the geometry of spatial features, such as points, lines, or polygons, instead of attribute values.</p>
+<section id="key-features-of-spatial-joins" class="level3">
+<h3 class="anchored" data-anchor-id="key-features-of-spatial-joins">Key Features of Spatial Joins</h3>
+<ol type="1">
+<li><p><strong>Spatial Relationships</strong>:</p>
+<ul>
+<li><p><strong>Proximity</strong>: Joining features based on whether one is near another.</p></li>
+<li><p><strong>Containment</strong>: Joining features that are completely within another feature.</p></li>
+</ul></li>
+<li><p><strong>Input Data</strong>:</p>
+<ul>
+<li><p>Usually involves two spatial datasets:</p>
+<ul>
+<li><p><strong>Target dataset</strong>: The main dataset where attributes are appended.</p></li>
+<li><p><strong>Join dataset</strong>: The dataset providing the additional attributes.</p></li>
+</ul></li>
+</ul></li>
+<li><p><strong>Result</strong>:</p>
+<ul>
+<li>A new dataset is created, combining attributes from both datasets based on their spatial relationship.</li>
+</ul></li>
+</ol>
+</section>
+<section id="common-examples" class="level3">
+<h3 class="anchored" data-anchor-id="common-examples">Common Examples</h3>
+<ul>
+<li><p><strong>Assigning Points to Polygons</strong>: Assigning city points to the state polygons they belong to.</p></li>
+<li><p><strong>Proximity Analysis</strong>: Finding the nearest hospital for each school.</p></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="count-points-in-a-polygon" class="level2">
+<h2 class="anchored" data-anchor-id="count-points-in-a-polygon">Count Points in a Polygon</h2>
+<p>Often we want to know how many points fall within a polygon. This can be helpful to calculate rates or prevalence by a given polygon. An example may be the number of tuberculosis cases in a given census tract.</p>
+<p>For this example we want to calculate the number of cholera deaths per Soho neighborhood block in our data during period two of the cholera outbreak.</p>
+<p>This will require the target dataset, neighborhoods, and the join dataset deaths.</p>
+<p>The function we will use is <code>st_join</code> and it takes three arguments:</p>
+<ul>
+<li><p>the <code>points</code> data</p></li>
+<li><p>the <code>polygon</code> data</p></li>
+<li><p>and the <code>join</code> type, in this case <code>st_within</code> to count the points that fall <em>within</em> a polygon</p></li>
+</ul>
+<p>We will also use <code>st_drop_geometry</code> so that we can remove the geometry to aggregate the cases within the neighborhoods.</p>
+<p>This process will take a few steps, let’s look at them</p>
+<ol type="1">
+<li><p>Step One: We get a joined dataset that has repeated polygons, one for each death. This will not map, we need to aggregate to count those cases. This only links the cases to the polygon.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>points_in_polygons <span class="ot">&lt;-</span> <span class="fu">st_join</span>(deaths, neighborhoods, <span class="at">join=</span>st_within)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Step Two: We must remove the geometry using <code>st_drop_geometry</code> so that we can aggregate and count the number of cases per polygon. We will <code>group_by</code> and the <code>Id</code> variable to get the counts. Notice, if we look at the number of rows in the <code>point_counts</code> dataset there are only 51, that means only 51 of the polygons have cases.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>point_counts <span class="ot">&lt;-</span> points_in_polygons <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Id)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Step Three: We now have the <code>point_counts</code> dataset which has the counts by polygon <code>Id</code> lets table join to the <code>neighborhoods</code> by <code>Id</code> to get the count data in the <code>neighborhoods</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>neighborhoods_death <span class="ot">&lt;-</span> neighborhoods <span class="sc">|&gt;</span> </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">inner_join</span>(point_counts, <span class="at">by=</span><span class="fu">join_by</span>(<span class="st">"Id"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Step Four: Let’s map this thing!</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhoods)<span class="sc">+</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>()<span class="sc">+</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(neighborhoods_death)<span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"n"</span>, <span class="at">title=</span><span class="st">"Cholera Cases"</span> )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── tmap v3 code detected ───────────────────────────────────────────────────────</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>[v3-&gt;v4] `tm_polygons()`: use 'fill' for the fill color of polygons/symbols
+(instead of 'col'), and 'col' for the outlines (instead of 'border.col').
+[v3-&gt;v4] `tm_polygons()`: migrate the argument(s) related to the legend of the
+visual variable `fill` namely 'title' to 'fill.legend = tm_legend(&lt;HERE&gt;)'
+This message is displayed once every 8 hours.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+</ol>
+</section>
+<section id="find-the-closest-point" class="level2">
+<h2 class="anchored" data-anchor-id="find-the-closest-point">Find the Closest Point</h2>
+<p>Now, what if we want to know which pump is closest to each case? That is a spatial join as well.</p>
+<p>Lets use a function called <code>st_nearest_feature</code> which takes two arguments:</p>
+<ul>
+<li><p><code>x</code> for each item in this object we will find its closest feature in <code>y</code></p></li>
+<li><p><code>y</code> our object that holds the features were searching for</p></li>
+</ul>
+<ol type="1">
+<li><p>Step One: Lets get the index of the closest feature</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>nearest <span class="ot">&lt;-</span> deaths <span class="sc">|&gt;</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>             <span class="fu">mutate</span>(<span class="at">pump =</span> <span class="fu">st_nearest_feature</span>(deaths, pumps_sf))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Step Two: Let’s visualize the deaths by their closest pump</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhoods)<span class="sc">+</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>()<span class="sc">+</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(nearest)<span class="sc">+</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>(<span class="at">col=</span><span class="st">"pump"</span>, <span class="at">size=</span>.<span class="dv">5</span>)<span class="sc">+</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(pumps_sf)<span class="sc">+</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>(<span class="at">col=</span><span class="st">"Pump_ID"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+</ol>
+</section>
+<section id="kernel-density-estimate" class="level2">
+<h2 class="anchored" data-anchor-id="kernel-density-estimate">Kernel Density Estimate</h2>
+<p>We can now create a heatmap of the cases so that we can where the cases happen most often.</p>
+<ol type="1">
+<li><p>Step One: Define the Study Area by defining a bounding polygon or a grid for KDE calculation. <code>cell_size</code> here is the size of the grid cells we wish to use based on the units of the features. In this case <code>deaths</code> is in British National Grid projection so it is in meters. So <code>cell_size</code> 1 is one meter by one meter. <strong>This may take a bit!</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a study grid over the area</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">create_raster</span>(deaths, <span class="at">cell_size =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Step Two: Calculate the kernel density, meaning how many cases happen in each of the cells of the raster grid. Wider bandwidth means ‘smoother’ rasters. <strong>This may take a bit!</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># KDE computation</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>kde_result_15 <span class="ot">&lt;-</span> <span class="fu">kde</span>(</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">points =</span> deaths,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">band_width =</span> <span class="dv">15</span>,  <span class="co"># Adjust bandwidth as needed</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> grid</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The number of cells (points) in the outcomes is large (`294749`). The calculation may take a while. To speed it up you can use larger `cell_size`.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<p>```</p>
+</div>
+</div></li>
+</ol>
+<p>Done: [——————————————————————–] . Done: [====—————————————————————-] . Done: [=====—————————————————————] . Done: [======————————————————————–] . Done: [=======————————————————————-] . Done: [========————————————————————] . Done: [=========———————————————————–] . Done: [==========———————————————————-] . Done: [===========———————————————————] . Done: [============——————————————————–] . Done: [=============——————————————————-] . Done: [==============——————————————————] . Done: [===============—————————————————–] . Done: [================—————————————————-] . Done: [=================—————————————————] . Done: [==================————————————————–] . Done: [===================————————————————-] . Done: [====================————————————————] . Done: [=====================———————————————–] . Done: [======================———————————————-] . Done: [=======================———————————————] . Done: [========================——————————————–] . Done: [=========================——————————————-] . Done: [==========================——————————————] . Done: [===========================—————————————–] . Done: [============================—————————————-] . Done: [=============================—————————————] . Done: [==============================————————————–] . Done: [===============================————————————-] . Done: [================================————————————] . Done: [=================================———————————–] . Done: [==================================———————————-] . Done: [===================================———————————] . Done: [====================================——————————–] . Done: [=====================================——————————-] . Done: [======================================——————————] . Done: [=======================================—————————–] . Done: [========================================—————————-] . Done: [=========================================—————————] . Done: [==========================================————————–] . Done: [===========================================————————-] . Done: [============================================————————] . Done: [=============================================———————–] . Done: [==============================================———————-] . Done: [===============================================———————] . Done: [================================================——————–] . Done: [=================================================——————-] . Done: [==================================================——————] . Done: [===================================================—————–] . Done: [====================================================—————-] . Done: [=====================================================—————] . Done: [======================================================————–] . Done: [=======================================================————-] . Done: [========================================================————] . Done: [=========================================================———–] . Done: [==========================================================———-] . Done: [===========================================================———] . Done: [============================================================——–] . Done: [=============================================================——-] . Done: [==============================================================——] . Done: [===============================================================—–] . Done: [================================================================—-] . Done: [=================================================================—] . Done: [==================================================================–] . Done: [===================================================================-] . Done: [====================================================================] .</p>
+<pre><code>```
+
+
+:::
+:::</code></pre>
+<ol start="3" type="1">
+<li><p>Now, let’s map this raster</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(kde_result_15)<span class="sc">+</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+<li><p>Now, lets alter the bandwidth to see what ‘smoother’ means.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># KDE computation</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>kde_result_35 <span class="ot">&lt;-</span> <span class="fu">kde</span>(</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">points =</span> deaths,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">band_width =</span> <span class="dv">35</span>,  <span class="co"># Adjust bandwidth as needed</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> grid</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The number of cells (points) in the outcomes is large (`294749`). The calculation may take a while. To speed it up you can use larger `cell_size`.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<p>```</p>
+</div>
+</div></li>
+</ol>
+<p>Done: [——————————————————————–] . Done: [====—————————————————————-] . Done: [=====—————————————————————] . Done: [======————————————————————–] . Done: [=======————————————————————-] . Done: [========————————————————————] . Done: [=========———————————————————–] . Done: [==========———————————————————-] . Done: [===========———————————————————] . Done: [============——————————————————–] . Done: [=============——————————————————-] . Done: [==============——————————————————] . Done: [===============—————————————————–] . Done: [================—————————————————-] . Done: [=================—————————————————] . Done: [==================————————————————–] . Done: [===================————————————————-] . Done: [====================————————————————] . Done: [=====================———————————————–] . Done: [======================———————————————-] . Done: [=======================———————————————] . Done: [========================——————————————–] . Done: [=========================——————————————-] . Done: [==========================——————————————] . Done: [===========================—————————————–] . Done: [============================—————————————-] . Done: [=============================—————————————] . Done: [==============================————————————–] . Done: [===============================————————————-] . Done: [================================————————————] . Done: [=================================———————————–] . Done: [==================================———————————-] . Done: [===================================———————————] . Done: [====================================——————————–] . Done: [=====================================——————————-] . Done: [======================================——————————] . Done: [=======================================—————————–] . Done: [========================================—————————-] . Done: [=========================================—————————] . Done: [==========================================————————–] . Done: [===========================================————————-] . Done: [============================================————————] . Done: [=============================================———————–] . Done: [==============================================———————-] . Done: [===============================================———————] . Done: [================================================——————–] . Done: [=================================================——————-] . Done: [==================================================——————] . Done: [===================================================—————–] . Done: [====================================================—————-] . Done: [=====================================================—————] . Done: [======================================================————–] . Done: [=======================================================————-] . Done: [========================================================————] . Done: [=========================================================———–] . Done: [==========================================================———-] . Done: [===========================================================———] . Done: [============================================================——–] . Done: [=============================================================——-] . Done: [==============================================================——] . Done: [===============================================================—–] . Done: [================================================================—-] . Done: [=================================================================—] . Done: [==================================================================–] . Done: [===================================================================-] . Done: [====================================================================] .</p>
+<pre><code>```
+
+
+:::
+:::</code></pre>
+<ol start="5" type="1">
+<li><p>Let’s map that, lookie there! We can see a pattern emerging!</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(kde_result_35)<span class="sc">+</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+</ol>
+</section>
+<section id="lab" class="level2">
+<h2 class="anchored" data-anchor-id="lab">Lab</h2>
+<section id="background" class="level3">
+<h3 class="anchored" data-anchor-id="background">Background</h3>
+<ul>
+<li><p>This lab will encompass all the labs but will mostly focus on what has been learned in this lesson.</p></li>
+<li><p>For this lab you will need to combine the deaths data into one dataset, we covered that a few lectures ago.</p></li>
+<li><p>All maps must contain proper elements.</p></li>
+<li><p>Any response from you should be in the chunks unless it ask you for a response aside from code you will see a bullet point.</p></li>
+</ul>
+</section>
+<section id="assignment" class="level3">
+<h3 class="anchored" data-anchor-id="assignment">Assignment</h3>
+<ol type="1">
+<li><p>In the code chunk below, import and combine all the deaths data. Also, import the pumps, neighborhood, and census data.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>pumps <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/Pumps.xlsx"</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/Soho_census.xlsx"</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>neighborhoods_census <span class="ot">&lt;-</span> <span class="fu">import</span>(<span class="st">"data/soho_census.xlsx"</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>deaths0 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_0_MOR.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_0_MOR' from data source 
+  `/Users/omara-rahman/Desktop/Semester 2 MPH/Computer based class/BIOS 532/Points/data/Cholera_Deaths_period_0_MOR.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1 feature and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529222.6 ymin: 181075.7 xmax: 529222.6 ymax: 181075.7
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>deaths1 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_1_JC.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_1_JC' from data source 
+  `/Users/omara-rahman/Desktop/Semester 2 MPH/Computer based class/BIOS 532/Points/data/Cholera_Deaths_period_1_JC.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 141 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529044.5 ymin: 180764.2 xmax: 529634.1 ymax: 181356.2
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>deaths3 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_3_LW.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_3_LW' from data source 
+  `/Users/omara-rahman/Desktop/Semester 2 MPH/Computer based class/BIOS 532/Points/data/Cholera_Deaths_period_3_LW.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 23 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529101.3 ymin: 180963.2 xmax: 529450.9 ymax: 181267.4
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>deaths4 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/Cholera_Deaths_period_4.shp"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Cholera_Deaths_period_4' from data source 
+  `/Users/omara-rahman/Desktop/Semester 2 MPH/Computer based class/BIOS 532/Points/data/Cholera_Deaths_period_4.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 84 features and 4 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 529056.2 ymin: 180822.7 xmax: 529487 ymax: 181357
+Projected CRS: OSGB36 / British National Grid</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>deaths <span class="ot">&lt;-</span> <span class="fu">rbind</span>(deaths, deaths0, deaths1, deaths3, deaths4)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Perform a join to combine the census data and the neighborhood data using the chunk below.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>neighborhoods <span class="ot">&lt;-</span> neighborhoods <span class="sc">%&gt;%</span> </span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>          <span class="fu">inner_join</span>(census, <span class="fu">join_by</span>(<span class="st">"Id"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Perform a spatial join that counts the number of cholera deaths per neighborhood. Call this dataset neighborhood_joined</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>points_in_polygons <span class="ot">&lt;-</span> <span class="fu">st_join</span>(deaths, neighborhoods, <span class="at">join=</span>st_within)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>point_counts <span class="ot">&lt;-</span> points_in_polygons <span class="sc">%&gt;%</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Id)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>neighborhoods_joined <span class="ot">&lt;-</span> neighborhoods <span class="sc">|&gt;</span> </span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">left_join</span>(point_counts, <span class="at">by=</span><span class="fu">join_by</span>(<span class="st">"Id"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Using the neighborhood_joined dataset from step three calculate prevalence of cholera within each of the neighborhoods. You may represent this number as a decimal or percentage. Hint: Use <code>mutate()</code> and some math operators. Note, you cannot divide by zero so make sure you do not have any neighborhood that have zero population. If you do, remove them.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>neighborhoods_joined <span class="ot">&lt;-</span> neighborhoods_joined <span class="sc">%&gt;%</span> </span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">mutate</span>(<span class="at">prev =</span> n<span class="sc">/</span>Population)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Create a map that shows the number of cases per neighborhood</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhoods_joined)<span class="sc">+</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col=</span><span class="st">"n"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+<li><p>Create a map that shows the prevalence per neighborhood</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(neighborhoods_joined)<span class="sc">+</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col=</span><span class="st">"prev"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div></li>
+<li><p>Now, perform a KDE with a cell size of 1 and a bandwidth of 50</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">create_raster</span>(deaths, <span class="at">cell_size =</span> <span class="dv">1</span>)</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>kde_result_50 <span class="ot">&lt;-</span> <span class="fu">kde</span>(</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">points =</span> deaths,</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">band_width =</span> <span class="dv">50</span>,  </span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> grid</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The number of cells (points) in the outcomes is large (`349870`). The calculation may take a while. To speed it up you can use larger `cell_size`.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<p>```</p>
+</div>
+</div></li>
+</ol>
+<p>Done: [——————————————————————–] . Done: [==——————————————————————] . Done: [===—————————————————————–] . Done: [====—————————————————————-] . Done: [=====—————————————————————] . Done: [======————————————————————–] . Done: [=======————————————————————-] . Done: [========————————————————————] . Done: [=========———————————————————–] . Done: [==========———————————————————-] . Done: [===========———————————————————] . Done: [============——————————————————–] . Done: [=============——————————————————-] . Done: [==============——————————————————] . Done: [===============—————————————————–] . Done: [================—————————————————-] . Done: [=================—————————————————] . Done: [==================————————————————–] . Done: [===================————————————————-] . Done: [====================————————————————] . Done: [=====================———————————————–] . Done: [======================———————————————-] . Done: [=======================———————————————] . Done: [========================——————————————–] . Done: [=========================——————————————-] . Done: [==========================——————————————] . Done: [===========================—————————————–] . Done: [============================—————————————-] . Done: [=============================—————————————] . Done: [==============================————————————–] . Done: [===============================————————————-] . Done: [================================————————————] . Done: [=================================———————————–] . Done: [==================================———————————-] . Done: [===================================———————————] . Done: [====================================——————————–] . Done: [=====================================——————————-] . Done: [======================================——————————] . Done: [=======================================—————————–] . Done: [========================================—————————-] . Done: [=========================================—————————] . Done: [==========================================————————–] . Done: [===========================================————————-] . Done: [============================================————————] . Done: [=============================================———————–] . Done: [==============================================———————-] . Done: [===============================================———————] . Done: [================================================——————–] . Done: [=================================================——————-] . Done: [==================================================——————] . Done: [===================================================—————–] . Done: [====================================================—————-] . Done: [=====================================================—————] . Done: [======================================================————–] . Done: [=======================================================————-] . Done: [========================================================————] . Done: [=========================================================———–] . Done: [==========================================================———-] . Done: [===========================================================———] . Done: [============================================================——–] . Done: [=============================================================——-] . Done: [==============================================================——] . Done: [===============================================================—–] . Done: [================================================================—-] . Done: [=================================================================—] . Done: [==================================================================–] . Done: [===================================================================-] . Done: [====================================================================] .</p>
+<pre><code>```
+
+
+:::
+
+```{.r .cell-code}
+tm_shape(kde_result_50)+
+  tm_raster()
+```
+
+::: {.cell-output-display}
+![](spatial_files/figure-html/unnamed-chunk-19-1.png){width=672}
+:::
+:::</code></pre>
+<ol start="8" type="1">
+<li><p>Map the KDE from step seven, show the pumps.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">create_raster</span>(deaths, <span class="at">cell_size =</span> <span class="dv">1</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>kde_result_50 <span class="ot">&lt;-</span> <span class="fu">kde</span>(</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">points =</span> deaths,</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">band_width =</span> <span class="dv">50</span>,  </span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> grid)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The number of cells (points) in the outcomes is large (`349870`). The calculation may take a while. To speed it up you can use larger `cell_size`.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<p>```</p>
+</div>
+</div></li>
+</ol>
+<p>Done: [——————————————————————–] . Done: [==——————————————————————] . Done: [===—————————————————————–] . Done: [====—————————————————————-] . Done: [=====—————————————————————] . Done: [======————————————————————–] . Done: [=======————————————————————-] . Done: [========————————————————————] . Done: [=========———————————————————–] . Done: [==========———————————————————-] . Done: [===========———————————————————] . Done: [============——————————————————–] . Done: [=============——————————————————-] . Done: [==============——————————————————] . Done: [===============—————————————————–] . Done: [================—————————————————-] . Done: [=================—————————————————] . Done: [==================————————————————–] . Done: [===================————————————————-] . Done: [====================————————————————] . Done: [=====================———————————————–] . Done: [======================———————————————-] . Done: [=======================———————————————] . Done: [========================——————————————–] . Done: [=========================——————————————-] . Done: [==========================——————————————] . Done: [===========================—————————————–] . Done: [============================—————————————-] . Done: [=============================—————————————] . Done: [==============================————————————–] . Done: [===============================————————————-] . Done: [================================————————————] . Done: [=================================———————————–] . Done: [==================================———————————-] . Done: [===================================———————————] . Done: [====================================——————————–] . Done: [=====================================——————————-] . Done: [======================================——————————] . Done: [=======================================—————————–] . Done: [========================================—————————-] . Done: [=========================================—————————] . Done: [==========================================————————–] . Done: [===========================================————————-] . Done: [============================================————————] . Done: [=============================================———————–] . Done: [==============================================———————-] . Done: [===============================================———————] . Done: [================================================——————–] . Done: [=================================================——————-] . Done: [==================================================——————] . Done: [===================================================—————–] . Done: [====================================================—————-] . Done: [=====================================================—————] . Done: [======================================================————–] . Done: [=======================================================————-] . Done: [========================================================————] . Done: [=========================================================———–] . Done: [==========================================================———-] . Done: [===========================================================———] . Done: [============================================================——–] . Done: [=============================================================——-] . Done: [==============================================================——] . Done: [===============================================================—–] . Done: [================================================================—-] . Done: [=================================================================—] . Done: [==================================================================–] . Done: [===================================================================-] . Done: [====================================================================] .</p>
+<pre><code>```
+
+
+:::
+
+```{.r .cell-code}
+nearest &lt;- deaths |&gt; 
+             mutate(pump = st_nearest_feature(deaths, pumps_sf))
+  
+tm_shape(neighborhoods)+
+  tm_borders()+
+  tm_shape(kde_result_50)+
+  tm_raster()+
+  tm_shape(nearest)+
+  tm_dots(col="pump", size=.5)+
+  tm_shape(pumps_sf)+
+  tm_dots(fill="purple")
+```
+
+::: {.cell-output-display}
+![](spatial_files/figure-html/unnamed-chunk-20-1.png){width=672}
+:::
+:::</code></pre>
+<ol start="9" type="1">
+<li><p>What pump seems to have the highest density near it, you do not need to give a number you can say something like, the central or the far left</p>
+<ul>
+<li>At the center and lower center-right</li>
+</ul></li>
+<li><p>Now, perform a KDE with a cell size of 1 and a bandwidth of 100</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">create_raster</span>(deaths, <span class="at">cell_size =</span> <span class="dv">1</span>)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>kde_result_100 <span class="ot">&lt;-</span> <span class="fu">kde</span>(</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">points =</span> deaths,</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">band_width =</span> <span class="dv">100</span>,  </span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> grid</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The number of cells (points) in the outcomes is large (`349870`). The calculation may take a while. To speed it up you can use larger `cell_size`.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<p>```</p>
+</div>
+</div></li>
+</ol>
+<p>Done: [——————————————————————–] . Done: [==——————————————————————] . Done: [===—————————————————————–] . Done: [====—————————————————————-] . Done: [=====—————————————————————] . Done: [======————————————————————–] . Done: [=======————————————————————-] . Done: [========————————————————————] . Done: [=========———————————————————–] . Done: [==========———————————————————-] . Done: [===========———————————————————] . Done: [============——————————————————–] . Done: [=============——————————————————-] . Done: [==============——————————————————] . Done: [===============—————————————————–] . Done: [================—————————————————-] . Done: [=================—————————————————] . Done: [==================————————————————–] . Done: [===================————————————————-] . Done: [====================————————————————] . Done: [=====================———————————————–] . Done: [======================———————————————-] . Done: [=======================———————————————] . Done: [========================——————————————–] . Done: [=========================——————————————-] . Done: [==========================——————————————] . Done: [===========================—————————————–] . Done: [============================—————————————-] . Done: [=============================—————————————] . Done: [==============================————————————–] . Done: [===============================————————————-] . Done: [================================————————————] . Done: [=================================———————————–] . Done: [==================================———————————-] . Done: [===================================———————————] . Done: [====================================——————————–] . Done: [=====================================——————————-] . Done: [======================================——————————] . Done: [=======================================—————————–] . Done: [========================================—————————-] . Done: [=========================================—————————] . Done: [==========================================————————–] . Done: [===========================================————————-] . Done: [============================================————————] . Done: [=============================================———————–] . Done: [==============================================———————-] . Done: [===============================================———————] . Done: [================================================——————–] . Done: [=================================================——————-] . Done: [==================================================——————] . Done: [===================================================—————–] . Done: [====================================================—————-] . Done: [=====================================================—————] . Done: [======================================================————–] . Done: [=======================================================————-] . Done: [========================================================————] . Done: [=========================================================———–] . Done: [==========================================================———-] . Done: [===========================================================———] . Done: [============================================================——–] . Done: [=============================================================——-] . Done: [==============================================================——] . Done: [===============================================================—–] . Done: [================================================================—-] . Done: [=================================================================—] . Done: [==================================================================–] . Done: [===================================================================-] . Done: [====================================================================] .</p>
+<pre><code>```
+
+
+:::
+
+```{.r .cell-code}
+tm_shape(kde_result_100)+
+  tm_raster()
+```
+
+::: {.cell-output-display}
+![](spatial_files/figure-html/unnamed-chunk-21-1.png){width=672}
+:::
+:::</code></pre>
+<ol start="11" type="1">
+<li><p>Map the KDE from step ten, show the pumps.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">create_raster</span>(deaths, <span class="at">cell_size =</span> <span class="dv">1</span>)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>kde_result_100 <span class="ot">&lt;-</span> <span class="fu">kde</span>(</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">points =</span> deaths,</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">band_width =</span> <span class="dv">100</span>,</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> grid</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The number of cells (points) in the outcomes is large (`349870`). The calculation may take a while. To speed it up you can use larger `cell_size`.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<p>```</p>
+</div>
+</div></li>
+</ol>
+<p>Done: [——————————————————————–] . Done: [==——————————————————————] . Done: [===—————————————————————–] . Done: [====—————————————————————-] . Done: [=====—————————————————————] . Done: [======————————————————————–] . Done: [=======————————————————————-] . Done: [========————————————————————] . Done: [=========———————————————————–] . Done: [==========———————————————————-] . Done: [===========———————————————————] . Done: [============——————————————————–] . Done: [=============——————————————————-] . Done: [==============——————————————————] . Done: [===============—————————————————–] . Done: [================—————————————————-] . Done: [=================—————————————————] . Done: [==================————————————————–] . Done: [===================————————————————-] . Done: [====================————————————————] . Done: [=====================———————————————–] . Done: [======================———————————————-] . Done: [=======================———————————————] . Done: [========================——————————————–] . Done: [=========================——————————————-] . Done: [==========================——————————————] . Done: [===========================—————————————–] . Done: [============================—————————————-] . Done: [=============================—————————————] . Done: [==============================————————————–] . Done: [===============================————————————-] . Done: [================================————————————] . Done: [=================================———————————–] . Done: [==================================———————————-] . Done: [===================================———————————] . Done: [====================================——————————–] . Done: [=====================================——————————-] . Done: [======================================——————————] . Done: [=======================================—————————–] . Done: [========================================—————————-] . Done: [=========================================—————————] . Done: [==========================================————————–] . Done: [===========================================————————-] . Done: [============================================————————] . Done: [=============================================———————–] . Done: [==============================================———————-] . Done: [===============================================———————] . Done: [================================================——————–] . Done: [=================================================——————-] . Done: [==================================================——————] . Done: [===================================================—————–] . Done: [====================================================—————-] . Done: [=====================================================—————] . Done: [======================================================————–] . Done: [=======================================================————-] . Done: [========================================================————] . Done: [=========================================================———–] . Done: [==========================================================———-] . Done: [===========================================================———] . Done: [============================================================——–] . Done: [=============================================================——-] . Done: [==============================================================——] . Done: [===============================================================—–] . Done: [================================================================—-] . Done: [=================================================================—] . Done: [==================================================================–] . Done: [===================================================================-] . Done: [====================================================================] .</p>
+<pre><code>```
+
+
+:::
+
+```{.r .cell-code}
+nearest &lt;- deaths |&gt;
+  mutate(pump = st_nearest_feature(geometry, pumps_sf))
+
+tm_shape(neighborhoods) +
+  tm_borders() +
+  tm_shape(kde_result_100) +
+  tm_raster() +
+  tm_shape(nearest) +
+  tm_dots(col = "pump", size = 0.5) +
+  tm_shape(pumps_sf) +
+  tm_dots(fill = "purple") 
+```
+
+::: {.cell-output-display}
+![](spatial_files/figure-html/unnamed-chunk-22-1.png){width=672}
+:::
+:::</code></pre>
+<ol start="12" type="1">
+<li><p>What pump seems to have the highest density near it, you do not need to give a number you can say something like, the central or the far left</p>
+<ul>
+<li>Both at the center and the lower-central right</li>
+</ul></li>
+</ol>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
